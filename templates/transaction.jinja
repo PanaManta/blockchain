@@ -1,0 +1,24 @@
+
+====== TRANSACTION INFO ({{i}}) ======
+
+HASH: {{transaction_id}}
+
+Signature in base64 encoding:
+{{signature}}
+
+Amount: {{amount}}
+
+Tranaction Inputs:{% for input in transaction_inputs %}
+{{input}}{% endfor %}
+
+Sender Transaction Output:
+{{transaction_outputs[sender_address]}}
+
+Receiver Transaction Output:
+{{transaction_outputs[receiver_address]}}
+
+Sender Pub key:
+{{sender_address}}
+
+Receiver Pub key:
+{{receiver_address}}
