@@ -1,0 +1,9 @@
+---
+
+- name: Copy source code
+  hosts: all
+  tasks:
+    - name: copy source code
+      copy:
+        src: ~/blockchain
+        dest: ~/

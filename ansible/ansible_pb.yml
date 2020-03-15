@@ -1,0 +1,29 @@
+---
+
+- name: First configuration of nodes
+  hosts: all
+  
+
+  tasks:
+    - name: Install pip with apt
+      apt:
+        name: python3-pip
+        state: present
+      become: true
+    - name: Check if upgrade is needed
+      stat:
+        path: ~/upgraded
+      register: pip_upgraded
+    - name: Upgrade pip
+      shell: pip install --upgrade pip > ~/upgraded
+      when: pip_upgraded.stat.exists == false 
+    - name: Install flask
+      pip: name=flask
+    - name: Install requests
+      pip: name=requests
+    - name: Install flask_cors
+      pip: name=flask_cors
+    - name: Install Crypto
+      pip: name=pycrypto
+    - name: Install jinja2
+      pip: name=jinja2
