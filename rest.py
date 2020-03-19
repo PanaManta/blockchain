@@ -177,7 +177,15 @@ def get_balances():
         utxos = node.ring[i]['utxos']
         json[i] = sum([ list(i.values())[0] for i in utxos])
 
+    json['sum'] = sum([json[i] for i in json])
     return jsonify(json), 200
+
+# get the mining time average MTA
+@app.route('/mta', methods=['GET'])
+def get_mta():
+    global node
+    avg = sum([b.mining_time for b in node.chain])/len(node.chain)
+    return jsonify(avg), 200
 
 # define skip = true if we want to skip the
 # the CURRENT_NODE_ID when broadcasting
@@ -219,10 +227,12 @@ def bootstrap_setup(node):
         b.add_transaction(init_t.transaction_id)
         # we want nonce = 0 so calculate a valid hash 
         # with timestamp change
+        start_t = time.time()
         while not b.hash.startswith(MINING_DIFFICULTY*'0'):
             b.timestamp = time.time()
             b.calculate_hash()
-        
+
+        b.mining_time = time.time() - start_t
         # add the first transaction to the transaction dictionary
         node.alltransactions[init_t.transaction_id] = init_t
         b.mined = True

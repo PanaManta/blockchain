@@ -19,6 +19,7 @@ class Block(jsonizer.Jsonizer):
         self.transactions = [] # transaction ids that are in the block
         self.calculate_hash() # calculate the hash
         self.mined = False
+        self.mining_time = 0 # milliseconds
     
     # SHA.new(str(hash(b)).encode()).hexdigest()
     def __hash__(self):

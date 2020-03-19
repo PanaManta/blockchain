@@ -150,7 +150,7 @@ class Node(jsonizer.Jsonizer):
         # Now check the capacity and mine block
         # and broadcast it if the last block does not have the same id as
         # the candidate block, if it does somebody already mined it
-        if len(self.candidate_block.transactions) >= CAPACITY:
+        while len(self.candidate_block.transactions) >= CAPACITY and not self.candidate_block.mined:
             self.mine_block(tid)
             # if noone mined before me broadcast
             # if some1 mined the block the candidate block would be
@@ -160,12 +160,7 @@ class Node(jsonizer.Jsonizer):
                 self.broadcast_block(self.candidate_block)
             else:
                 print('I do not broadcast my block cause it was discarded')
-       
-        # From now on this could resolve to deadlock
-        # where a transaction is not added to the block
-        # because there is left a transaction that was not
-        # mined before ERROR PRUNE
-        while len(self.candidate_block.transactions) >= CAPACITY and not self.candidate_block.mined: self.mine_block(tid) # pass
+
         # check if the transaction is in the chain already
         if tid not in [id for b in self.chain for id in b.transactions]:
             print('adding transaction to block', tid)
@@ -214,11 +209,6 @@ class Node(jsonizer.Jsonizer):
             print('Not valid')
             self.valid_chain()
 
-        # TODO: na tsekarw ligo to not valid block
-        # an as poume kanoume mine ena block
-        # kai auto pou irthe den einai valid ti kanoume???
-        # i ti kanoume me to candidate block???
-
         # get the cut between the transaction of the processed block
         # and the current candidate block
         cut = [t for t in self.candidate_block.transactions if t not in b.transactions]
@@ -236,6 +226,7 @@ class Node(jsonizer.Jsonizer):
     def mine_block(self, tid):
         #while self.mining: pass # like semaphore
         self.mining = True # set that we are currently mining our candidate block
+        start_t = time.time()
         print('MINING CANDIDATE BLOCK BECAUSE OF %s\n' % tid, self.candidate_block.__dict__)
         try:
             # for some reason the block 
@@ -246,6 +237,7 @@ class Node(jsonizer.Jsonizer):
                 self.candidate_block.calculate_hash()
             
             self.candidate_block.mined = True
+            self.candidate_block.mining_time = time.time() - start_t
             print('Candidate block mined')
             print(self.candidate_block.__dict__)
         except AttributeError:
