@@ -1,0 +1,60 @@
+Help on module transaction:
+
+NAME
+    transaction
+
+CLASSES
+    jsonizer.Jsonizer(builtins.object)
+        Transaction
+    
+    class Transaction(jsonizer.Jsonizer)
+     |  Class describing a transaction in the blockchain
+     |  
+     |  Attributes:
+     |  transaction_id          The id of the transaction produced using SHA algorithm
+     |  sender_address          The public key of the sender node
+     |  receiver_address        The public key of the reciepient node
+     |  amount                  The amount to be transfered
+     |  transaction_inputs      Array of utxos to be used
+     |  transaction_outputs     The resulting utxos for the sender and receiver nodes
+     |  
+     |  Method resolution order:
+     |      Transaction
+     |      jsonizer.Jsonizer
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, sender_address, recipient_address, value, t_in)
+     |      Constructor
+     |  
+     |  sign_transaction(self, private_key)
+     |      Sign transaction with private key
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods defined here:
+     |  
+     |  fromJSON(data) from builtins.type
+     |      Create a new block object from json
+     |      
+     |      Arguments:
+     |      data    The json from which to create the object
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from jsonizer.Jsonizer:
+     |  
+     |  toJSON(self)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from jsonizer.Jsonizer:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+
+FILE
+    /home/user/blockchain/transaction.py
+
+

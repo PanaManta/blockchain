@@ -1,0 +1,47 @@
+Help on module wallet:
+
+NAME
+    wallet
+
+CLASSES
+    jsonizer.Jsonizer(builtins.object)
+        Wallet
+    
+    class Wallet(jsonizer.Jsonizer)
+     |  Class describing a wallet in the blockchain
+     |  
+     |  Attributes:
+     |  public_key      Produced public key using the RSA algorithm "utf-8" representation
+     |  private_key     Producted private key using the RSA algorithm "utf-8" representation
+     |  addressp        The communication information of the wallet
+     |  
+     |  Method resolution order:
+     |      Wallet
+     |      jsonizer.Jsonizer
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, addressp)
+     |      Constructor
+     |      
+     |      Generates key pair
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from jsonizer.Jsonizer:
+     |  
+     |  toJSON(self)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from jsonizer.Jsonizer:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+
+FILE
+    /home/user/blockchain/wallet.py
+
+

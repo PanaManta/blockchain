@@ -20,6 +20,19 @@ MINING_DIFFICULTY = 4 # how many zeros should a hash have in order to be accepte
 CAPACITY = 1 # how many transactions a block should contain
 
 class Node(jsonizer.Jsonizer):
+    ''' Class describing a node in the network
+    
+        Attributes:
+        id                  The id of the node got from bootstrap node
+        wallet              The wallet of the node
+        addressp            The communication information ip:port
+        chain               Array of blocks "blockchain"
+        ring                All the information about the nodes of the network
+        mining              Boolean attribute indication whether or not the node is mining its candidate block
+        candidate_block     The next block that will get mined when CAPACITY transactions reach the node
+        pub_map             Dictionary from public_key -> node id 
+        bootstrap_info      The communication info of the bootstrap node
+        alltransaction      All the transactions processed by the network '''
     def __init__(self, addressp, bootstrap_info):
         self.chain = [] # this is the current blockchain that the node sees from bootstrap
         self.alltransactions = {} # from bootstrap node
@@ -37,23 +50,25 @@ class Node(jsonizer.Jsonizer):
     # map with format 'pub_key' -> id in order to be able to update the utxos
     # using the pub_keys in the initial ring
     def pub_key_mapping(self):
+        '''Produce the public_key -> node id dictionary using the ring'''
         return {value['pub_key'] : key for (key, value) in self.ring.items()}
     
     def create_new_block(self, save=True):
-        # create new block when capacity is reached of transactions
+        '''Create new block by resetting the attributes of the candidate block'''
         ph = 1 if len(self.chain) == 0 else self.chain[-1].hash
         b = Block(len(self.chain), ph, time.time())
         if save: self.candidate_block = b
         return b
 
     def create_wallet(self):
-        #create a wallet for this node, with a public key and a private key
+        '''Create wallet for the node'''
         self.wallet = Wallet(self.addressp)
         return self.wallet
 
     # this function in the bootstrap node should do
     # other things that normal nodes
     def register_node_to_ring(self):
+        '''Communicate with the bootstrap node in order to insert the node to the ring'''
         self.create_wallet()
         d = {
             'pub_key' : self.wallet.public_key,
@@ -88,6 +103,7 @@ class Node(jsonizer.Jsonizer):
     # to transfer
     # raise Exception for insufficient funds
     def find_funds(self, amount):
+        '''Find available utxos in order to satisfy the amount (Used when creating a transaction)'''
         if not amount > 0: raise Exception('Invalid amount to transfer.')
         s = 0
         t_in = []
@@ -105,7 +121,7 @@ class Node(jsonizer.Jsonizer):
     
     # receiver is wallet
     def create_transaction(self, receiver, value, find_funds=True):
-        # remember to broadcast it sender_address, sender_private_key, recipient_address, value
+        '''Create a new transaction and sign it if there are funds to satisfy the amount'''
         if self.wallet.public_key == receiver and find_funds: 
             raise Exception('Cannot send transfer to own wallet')
         
@@ -118,8 +134,8 @@ class Node(jsonizer.Jsonizer):
     # new node is not up
     # @t: transaction to broadcast
     def broadcast_transaction(self, t, skip=None):
+        '''Broadcast transaction to the network using the ring '''
         print('Broadcasting transaction')
-        # make it async
         for n in self.ring:
             # skip the one that did the request because its not up yet
             if (n == skip or n == self.id): 
@@ -130,6 +146,8 @@ class Node(jsonizer.Jsonizer):
         self.process_transaction(t)
     
     def validate_transaction(self, t):
+        '''Validate the transaction by validating its signature
+        and transaction inputs'''
     # use of signature and NBCs balance
         k = RSA.importKey(t.sender_address)
         verifier = PKCS1_v1_5.new(k)
@@ -144,6 +162,9 @@ class Node(jsonizer.Jsonizer):
         return ret
 
     def add_transaction_to_block(self, tid):
+        '''Add transaction to block if its possible. If it is not mine
+        the candidate block in order to make space for the new transaction.
+        This is done synchronized among threads.'''
         print('add transaction to block')
         sem.acquire()
         # loop until the candidate block transaction are full
@@ -176,6 +197,7 @@ class Node(jsonizer.Jsonizer):
     # adds the transaction to alltransactions
     # adds the transaction to the candidate block
     def process_transaction(self, t):
+        '''Process transaction.'''
         print('Process transaction\n', t.transaction_id)
         if (self.validate_transaction(t)):
             # fix the utxos that the transaction indicates in the ring !!!
@@ -197,10 +219,12 @@ class Node(jsonizer.Jsonizer):
             print('Invalid transaction')
     
     def get_balance(self):
+        '''Find the nodes balance according to its utxos in the ring'''
         utxos = self.ring[self.id]['utxos']
         return sum([ list(i.values())[0] for i in utxos])
 
     def process_block(self, b, remote=False):
+        '''Process new block internal or remote.'''
         print('Processing new block remote =', remote)
         if (self.validate_block(b)):
             print('Is valid')
@@ -224,6 +248,8 @@ class Node(jsonizer.Jsonizer):
     # change the nonce of the block in order to
     # achieve the zeroes
     def mine_block(self, tid):
+        '''Mine candidate block. Stop if mine is succesfull or from process block remote
+        when new block from the network is available'''
         #while self.mining: pass # like semaphore
         self.mining = True # set that we are currently mining our candidate block
         start_t = time.time()
@@ -245,6 +271,7 @@ class Node(jsonizer.Jsonizer):
         return
 
     def broadcast_block(self, b):
+        '''Broadcast mined block the network'''
         print('Broadcasting block ----> ', b.__dict__)
         for n in self.ring:
             # skip the one that did the request because its not up yet
@@ -263,6 +290,7 @@ class Node(jsonizer.Jsonizer):
         return
 
     def validate_block(self, b):
+        '''Validate block by validating its proof of work and the previous hash'''
         ret = b.hash.startswith(MINING_DIFFICULTY*'0')
         ret &= b.previous_hash == self.chain[-1].hash
         return ret
@@ -271,11 +299,13 @@ class Node(jsonizer.Jsonizer):
     #     ret = b.hash.startswith(MINING_DIFFICULTY*'0')
 
     def validate_chain(self, chain):
+        '''Validate chain by validating all the blocks in the chain '''
         # check for the longer chain accroose all nodes
         return all([self.chain[i].previous_hash == self.chain[i-1].hash for i in range(len(self.chain)-1, 1, -1)])
 
     #concencus functions
     def valid_chain(self):
+        '''Find the bigger chain in the network'''
         # check for the longer chain accroose all nodes
         # take all the chains and keep the longer
         print('Getting longer chain')
@@ -294,6 +324,7 @@ class Node(jsonizer.Jsonizer):
         return
 
 def sublist(lst1, lst2):
+    '''Check whether or not lst1 is a sublist of lst2'''
     ls1 = [element for element in lst1 if element in lst2]
     ls2 = [element for element in lst2 if element in lst1]
     return ls1 == ls2
@@ -302,4 +333,6 @@ def request_task(url, data):
     requests.post(url, json=data)
 
 def fire_and_forget(url, json):
+    '''Send request post without waiting for the response
+    Used when broadcasting'''
     threading.Thread(target=request_task, args=(url, json)).start()

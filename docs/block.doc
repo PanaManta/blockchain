@@ -1,0 +1,69 @@
+Help on module block:
+
+NAME
+    block
+
+CLASSES
+    jsonizer.Jsonizer(builtins.object)
+        Block
+    
+    class Block(jsonizer.Jsonizer)
+     |  Class describing a block in the blockchain
+     |  
+     |  Attributes:
+     |  id              The id of the block (coming from node.chain.size)
+     |  previous_hash   The hash of the previous block in the chain
+     |  timestamp       The timestamp of creation of the block
+     |  nonce           The proof of work
+     |  transactions    Array of transaction ids that the block contains
+     |  mined           Boolean attribute indicating that the block is mined
+     |  mining_time     The time it took for the block to be mined
+     |  
+     |  Method resolution order:
+     |      Block
+     |      jsonizer.Jsonizer
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __hash__(self)
+     |      Return the hash of the block using the attributes:
+     |      id, previous_hash, timestamp, nonce, transactions
+     |  
+     |  __init__(self, bid, previous_hash, timestamp)
+     |      Contstructor
+     |  
+     |  add_transaction(self, tid)
+     |      Add transaction to block
+     |  
+     |  calculate_hash(self)
+     |      Use SHA256 algorithm to hash the __hash__ and produce the
+     |      hash for the block in hex representation
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods defined here:
+     |  
+     |  fromJSON(data) from builtins.type
+     |      Create a new block object from json
+     |      
+     |      Arguments:
+     |      data    The json from which to create the object
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from jsonizer.Jsonizer:
+     |  
+     |  toJSON(self)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from jsonizer.Jsonizer:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+
+FILE
+    /home/user/blockchain/block.py
+
+

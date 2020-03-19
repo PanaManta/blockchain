@@ -1,22 +1,18 @@
-import binascii
-
-import Crypto
-import Crypto.Random
-from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
-
-import hashlib
-import json
-from time import time
-from urllib.parse import urlparse
-from uuid import uuid4
 import jsonizer
 
 
 class Wallet(jsonizer.Jsonizer):
+    ''' Class describing a wallet in the blockchain
+    
+        Attributes:
+        public_key      Produced public key using the RSA algorithm "utf-8" representation
+        private_key     Producted private key using the RSA algorithm "utf-8" representation
+        addressp        The communication information of the wallet'''
     def __init__(self, addressp):
-        ##set
+        ''' Constructor
+                
+                Generates key pair'''
         key = RSA.generate(2048)
         self.public_key = key.publickey().exportKey().decode('utf-8')
         self.private_key = key.exportKey().decode('utf-8')

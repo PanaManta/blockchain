@@ -1,0 +1,135 @@
+Help on module node:
+
+NAME
+    node
+
+CLASSES
+    jsonizer.Jsonizer(builtins.object)
+        Node
+    
+    class Node(jsonizer.Jsonizer)
+     |  Class describing a node in the network
+     |  
+     |  Attributes:
+     |  id                  The id of the node got from bootstrap node
+     |  wallet              The wallet of the node
+     |  addressp            The communication information ip:port
+     |  chain               Array of blocks "blockchain"
+     |  ring                All the information about the nodes of the network
+     |  mining              Boolean attribute indication whether or not the node is mining its candidate block
+     |  candidate_block     The next block that will get mined when CAPACITY transactions reach the node
+     |  pub_map             Dictionary from public_key -> node id 
+     |  bootstrap_info      The communication info of the bootstrap node
+     |  alltransaction      All the transactions processed by the network
+     |  
+     |  Method resolution order:
+     |      Node
+     |      jsonizer.Jsonizer
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, addressp, bootstrap_info)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  add_transaction_to_block(self, tid)
+     |      Add transaction to block if its possible. If it is not mine
+     |      the candidate block in order to make space for the new transaction.
+     |      This is done synchronized among threads.
+     |  
+     |  broadcast_block(self, b)
+     |      Broadcast mined block the network
+     |  
+     |  broadcast_transaction(self, t, skip=None)
+     |      Broadcast transaction to the network using the ring
+     |  
+     |  create_new_block(self, save=True)
+     |      Create new block by resetting the attributes of the candidate block
+     |  
+     |  create_transaction(self, receiver, value, find_funds=True)
+     |      Create a new transaction and sign it if there are funds to satisfy the amount
+     |  
+     |  create_wallet(self)
+     |      Create wallet for the node
+     |  
+     |  find_funds(self, amount)
+     |      Find available utxos in order to satisfy the amount (Used when creating a transaction)
+     |  
+     |  get_balance(self)
+     |      Find the nodes balance according to its utxos in the ring
+     |  
+     |  mine_block(self, tid)
+     |      Mine candidate block. Stop if mine is succesfull or from process block remote
+     |      when new block from the network is available
+     |  
+     |  process_block(self, b, remote=False)
+     |      Process new block internal or remote.
+     |  
+     |  process_transaction(self, t)
+     |      Process transaction.
+     |  
+     |  pub_key_mapping(self)
+     |      Produce the public_key -> node id dictionary using the ring
+     |  
+     |  register_node_to_ring(self)
+     |      Communicate with the bootstrap node in order to insert the node to the ring
+     |  
+     |  resolve_conflicts(self)
+     |  
+     |  valid_chain(self)
+     |      Find the bigger chain in the network
+     |  
+     |  validate_block(self, b)
+     |      Validate block by validating its proof of work and the previous hash
+     |  
+     |  validate_chain(self, chain)
+     |      Validate chain by validating all the blocks in the chain
+     |  
+     |  validate_transaction(self, t)
+     |      Validate the transaction by validating its signature
+     |      and transaction inputs
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from jsonizer.Jsonizer:
+     |  
+     |  toJSON(self)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from jsonizer.Jsonizer:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+
+FUNCTIONS
+    fire_and_forget(url, json)
+        Send request post without waiting for the response
+        Used when broadcasting
+    
+    reduce(...)
+        reduce(function, sequence[, initial]) -> value
+        
+        Apply a function of two arguments cumulatively to the items of a sequence,
+        from left to right, so as to reduce the sequence to a single value.
+        For example, reduce(lambda x, y: x+y, [1, 2, 3, 4, 5]) calculates
+        ((((1+2)+3)+4)+5).  If initial is present, it is placed before the items
+        of the sequence in the calculation, and serves as a default when the
+        sequence is empty.
+    
+    request_task(url, data)
+    
+    sublist(lst1, lst2)
+        Check whether or not lst1 is a sublist of lst2
+
+DATA
+    CAPACITY = 1
+    MINING_DIFFICULTY = 4
+    sem = <threading.Semaphore object>
+    sem_t = <threading.Semaphore object>
+
+FILE
+    /home/user/blockchain/node.py
+
+
