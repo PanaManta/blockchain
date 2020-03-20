@@ -166,7 +166,7 @@ class Node(jsonizer.Jsonizer):
         the candidate block in order to make space for the new transaction.
         This is done synchronized among threads.'''
         print('add transaction to block')
-        sem.acquire()
+        sem.acquire() # maybe its not required the parent function has sync
         # loop until the candidate block transaction are full
         # Now check the capacity and mine block
         # and broadcast it if the last block does not have the same id as
@@ -199,11 +199,12 @@ class Node(jsonizer.Jsonizer):
     def process_transaction(self, t):
         '''Process transaction.'''
         print('Process transaction\n', t.transaction_id)
+        sem_t.acquire()
         if (self.validate_transaction(t)):
             # fix the utxos that the transaction indicates in the ring !!!
             # remove the transaction inputs from the sender utxos
             sender_id = self.pub_map[t.sender_address]
-            sem_t.acquire()
+           
             
             self.ring[sender_id]['utxos'] = [utxo for utxo in self.ring[sender_id]['utxos'] if utxo not in t.transaction_inputs]
             
@@ -212,11 +213,11 @@ class Node(jsonizer.Jsonizer):
                 noid = self.pub_map[key]
                 self.ring[noid]['utxos'].append(value)
             
-            sem_t.release()
             self.alltransactions[t.transaction_id] = t
             self.add_transaction_to_block(t.transaction_id)
         else:
             print('Invalid transaction')
+        sem_t.release()
     
     def get_balance(self):
         '''Find the nodes balance according to its utxos in the ring'''
@@ -323,11 +324,14 @@ class Node(jsonizer.Jsonizer):
         #resolve correct chain
         return
 
+# returns true if all the elements in lst2 are
+# in lst2
 def sublist(lst1, lst2):
-    '''Check whether or not lst1 is a sublist of lst2'''
-    ls1 = [element for element in lst1 if element in lst2]
-    ls2 = [element for element in lst2 if element in lst1]
-    return ls1 == ls2
+    '''Check whether or not lst2 is a sublist of lst1'''
+    # ls1 = [element for element in lst1 if element in lst2]
+    # ls2 = [element for element in lst2 if element in lst1]
+    # return ls1 == ls2
+    return all([elem in lst1 for elem in lst2])
 
 def request_task(url, data):
     requests.post(url, json=data)
