@@ -32,7 +32,7 @@ class Node(jsonizer.Jsonizer):
         candidate_block     The next block that will get mined when CAPACITY transactions reach the node
         pub_map             Dictionary from public_key -> node id 
         bootstrap_info      The communication info of the bootstrap node
-        alltransaction      All the transactions processed by the network '''
+        alltransactions     All the transactions processed by the network '''
     def __init__(self, addressp, bootstrap_info):
         self.chain = [] # this is the current blockchain that the node sees from bootstrap
         self.alltransactions = {} # from bootstrap node

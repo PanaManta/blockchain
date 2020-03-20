@@ -45,7 +45,7 @@ def command_not_found(cmd):
 def get_balance():
     '''Get wallet balance'''
     r = requests.get('http://' + ip + ':5000/node/balance')
-    print('Balance: ', r.text)
+    print('Balance: ', r.text, end = "")
 
 def get_help():
     '''Print this message'''
@@ -85,12 +85,12 @@ def run_transactions(filename):
     return
 
 def run_last_command():
-    '''Run latest command'''
+    '''Run latest run command'''
     global last_command
     run_command(last_command)
 
 def show_last_command():
-    '''Show last command'''
+    '''Show last run command'''
     global last_command
     print(last_command)
 
@@ -111,8 +111,6 @@ def run_command(command):
         dispatch[command]()
         if command.startswith('run'): last_command = command
     except KeyError:
-        # either create transaction
-        # or command not found
         matched_create = re.match(r't ([0-9].*) ([0-9].*)', command)
         matched_run = re.match(r'run (.+)', command)
         if matched_create is not None:
@@ -128,21 +126,6 @@ def run_command(command):
 def client():
     while (1):
         command = str(input('\033[1;32mclient>\033[0m '))
-        # try:
-        #     dispatch[command]()
-        # except KeyError:
-        #     # either create transaction
-        #     # or command not found
-        #     matched_create = re.match(r't ([0-9].*) ([0-9].*)', command)
-        #     matched_run = re.match(r'run (.+)', command)
-        #     if matched_create is not None:
-        #         r,a = matched_create.groups()
-        #         create_transaction(r, a)
-        #     elif matched_run:
-        #         (filename,) = matched_run.groups()
-        #         run_transactions(filename)
-        #     else:
-        #         command_not_found(command)
         run_command(command)
 
 if __name__ == '__main__':
