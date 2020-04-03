@@ -23,6 +23,7 @@ network_transactions = 0
 sem_n = threading.Semaphore()
 sem_c = threading.Semaphore()
 
+START_BUDGET = 1000
 # URI that the nodes connect with their public keys
 # Functionallity:
 # - add the node to the node ring
@@ -78,13 +79,17 @@ def node_connect():
     
     return jsonify(response), 200
 
-@app.route('/n_transactions', methods=['GET'])
+@app.route('/n_transactions', methods=['GET'])  # Get the number of transactions
 def get_client_transctions():
     global network_transactions, client_transactions, node
+    blockchain = node.chain
+    all_t = len([t for b in blockchain for t in b.transactions])
+    candidate_block_t = len(node.candidate_block.transactions)
     json = {
         'client': client_transactions,
         'network': network_transactions,
-        'all_transactions': len(node.alltransactions.keys())
+        
+        'all_transactions': all_t + candidate_block_t #len(node.alltransactions.keys())
     }
     return jsonify(json), 200
 
@@ -97,17 +102,17 @@ def update_ring():
     node.pub_map = node.pub_key_mapping()
     return '', 200
 
-@app.route('/pub_key_mapping', methods=['GET'])
+@app.route('/pub_key_mapping', methods=['GET']) # Get pub_key mapping
 def get_pub_key_mapping():
     global node
     return jsonify(node.pub_map), 200
 
-@app.route('/ring', methods=['GET'])
+@app.route('/ring', methods=['GET'])    # Get the ring of the system
 def get_ring():
     global node
     return jsonify(node.ring), 200
 
-@app.route('/node', methods=['GET'])
+@app.route('/node', methods=['GET'])    # Get the state of the node at this point
 def get_node():
     global node
     return jsonify(node), 200
@@ -116,12 +121,12 @@ def get_node():
 def new_transaction():
     print('Got new transaction')
     global node, network_transactions
+    # do this with semaphore to avoid memory leak?
     sem_n.acquire()
     network_transactions += 1
-    sem_n.release()
-    
     t = Transaction.fromJSON(request.json)
     node.process_transaction(t)
+    sem_n.release()
     return '', 200
 
 @app.route('/create_transaction', methods=['POST'])
@@ -152,24 +157,24 @@ def new_block():
     node.process_block(b, True)
     return '', 200
 
-@app.route('/node/chain', methods=['GET'])
+@app.route('/node/chain', methods=['GET']) # Get current blockchain
 def get_chain():
     global node
     return jsonify(node.chain), 200
 
-@app.route('/node/balance', methods=['GET'])
+@app.route('/node/balance', methods=['GET'])    # Get the nodes balance
 def get_balance():
     global node
     return jsonify(node.get_balance()), 200
 
-@app.route('/latest_transactions', methods=['GET'])
+@app.route('/latest_transactions', methods=['GET']) # Get the latest_block transctions
 def get_latest_transactions():
     global node
     lb = node.chain[-1]
     latest_trans = [node.alltransactions[key] for key in lb.transactions]
     return jsonify(latest_trans), 200
 
-@app.route('/get_balances', methods=['GET'])
+@app.route('/get_balances', methods=['GET']) # Get the balances for all the nodes as this backend sees
 def get_balances():
     global node
     json = {}
@@ -181,7 +186,7 @@ def get_balances():
     return jsonify(json), 200
 
 # get the mining time average MTA
-@app.route('/mta', methods=['GET'])
+@app.route('/mta', methods=['GET']) # Get the mining time average
 def get_mta():
     global node
     avg = sum([b.mining_time for b in node.chain])/len(node.chain)
@@ -213,11 +218,11 @@ def bootstrap_setup(node):
     }
     node.pub_map = node.pub_key_mapping()
     
-    init_t = node.create_transaction(node.wallet.public_key, 500, False)
+    init_t = node.create_transaction(node.wallet.public_key, START_BUDGET, False)
 
     # override the created outputs cause of genesis transaction
     init_t.transaction_outputs = {
-        init_t.receiver_address: {init_t.transaction_id: 500}
+        init_t.receiver_address: {init_t.transaction_id: START_BUDGET}
     }
 
     # create a new transaction for the genesis block don't broadcast
@@ -276,7 +281,7 @@ if __name__ == '__main__':
     node = Node(host + ':' + str(port), bootstrap) # create a new node
 
     # if we are on bootstrap node don't call the register_node_to_ring()
-    if (bootstrap.split(':')[0] == host):
+    if (bootstrap == str(host) + ':' + str(port)):
         print('## We are the bootstrap node')
         node = bootstrap_setup(node)
     else:

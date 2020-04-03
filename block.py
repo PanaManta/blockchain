@@ -49,7 +49,9 @@ class Block(jsonizer.Jsonizer):
     def calculate_hash(self):
         '''Use SHA256 algorithm to hash the __hash__ and produce the
         hash for the block in hex representation'''
-        self.hash = SHA256.new(str(hash(self)).encode()).hexdigest()
+        h = SHA256.new(str(hash(self)).encode())
+        self.hash = h.hexdigest()
+        del h
 
     # transaction to add to blockchain
     def add_transaction(self, tid):

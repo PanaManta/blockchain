@@ -4,11 +4,19 @@ from transaction import Transaction
 import jinja2
 import re
 import os
+import time
 
 ip = get_ip_address('eth1')
 last_command = ''
 project_dir = os.path.dirname(os.path.realpath(__file__))
 template_dir = project_dir + '/templates'
+
+from argparse import ArgumentParser
+parser = ArgumentParser()
+parser.add_argument('-p', '--port', default=5000, type=int, help='port to listen on')
+args = parser.parse_args()
+port = args.port
+backend_url = 'http://' + ip + ':' + str(port)
 
 def load_template(filename):
     templateLoader = jinja2.FileSystemLoader(searchpath=template_dir)
@@ -18,7 +26,7 @@ def load_template(filename):
 
 def view_transactions():
     '''View latest valid block transactions'''
-    r = requests.get('http://' + ip + ':5000/latest_transactions')
+    r = requests.get(backend_url + '/latest_transactions')
     list_of_transactions = [Transaction.fromJSON(i) for i in r.json()]
     template = load_template("transaction.jinja")
     i=1
@@ -34,7 +42,7 @@ def create_transaction(receiver, amount):
             'amount': amount
     }
     r = requests.post(
-        'http://' + ip + ':5000/create_transaction',
+        backend_url + '/create_transaction',
         json=d
     )
     print(r.status_code, r.text)
@@ -44,7 +52,7 @@ def command_not_found(cmd):
 
 def get_balance():
     '''Get wallet balance'''
-    r = requests.get('http://' + ip + ':5000/node/balance')
+    r = requests.get(backend_url + '/node/balance')
     print('Balance: ', r.text, end = "")
 
 def get_help():
@@ -57,7 +65,7 @@ def get_help():
 
 def get_pubs():
     '''Get public keys for each node'''
-    r = requests.get('http://' + ip + ':5000/pub_key_mapping')
+    r = requests.get(backend_url + '/pub_key_mapping')
     template = load_template('pub_key.jinja')
     for (key, value) in r.json().items():
         print(template.render(i=value, key=key))
@@ -65,6 +73,7 @@ def get_pubs():
 def run_transactions(filename):
     '''Execute transaction from file <filename>'''
     print('Run transactions from ', filename)
+    start_t = time.time()
     try:
         f = open(filename, 'r')
     except Exception as e:
@@ -80,7 +89,8 @@ def run_transactions(filename):
         else:
             print('Invalid syntax in file.')
             break
-
+    
+    print("The transactions took ", time.time() - start_t)
     f.close()
     return
 

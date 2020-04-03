@@ -11,13 +11,12 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 import base64
 import jsonizer
-from functools import reduce
 
 sem = threading.Semaphore()
 sem_t = threading.Semaphore()
 
-MINING_DIFFICULTY = 4 # how many zeros should a hash have in order to be accepted
-CAPACITY = 1 # how many transactions a block should contain
+MINING_DIFFICULTY = 5 # how many zeros should a hash have in order to be accepted
+CAPACITY = 10 # how many transactions a block should contain
 
 class Node(jsonizer.Jsonizer):
     ''' Class describing a node in the network
@@ -57,7 +56,9 @@ class Node(jsonizer.Jsonizer):
         '''Create new block by resetting the attributes of the candidate block'''
         ph = 1 if len(self.chain) == 0 else self.chain[-1].hash
         b = Block(len(self.chain), ph, time.time())
-        if save: self.candidate_block = b
+        if save:
+            del self.candidate_block 
+            self.candidate_block = b
         return b
 
     def create_wallet(self):
@@ -199,7 +200,6 @@ class Node(jsonizer.Jsonizer):
     def process_transaction(self, t):
         '''Process transaction.'''
         print('Process transaction\n', t.transaction_id)
-        sem_t.acquire()
         if (self.validate_transaction(t)):
             # fix the utxos that the transaction indicates in the ring !!!
             # remove the transaction inputs from the sender utxos
@@ -260,7 +260,7 @@ class Node(jsonizer.Jsonizer):
             while not self.candidate_block.hash.startswith(MINING_DIFFICULTY*'0'):
                 #if len(self.candidate_block.transactions) == 0 : raise AttributeError # got block from network
                 if not self.mining: raise AttributeError # self.mining is set to False when we process a block
-                self.candidate_block.nonce =  Crypto.Random.random.getrandbits(32)
+                self.candidate_block.nonce += 1 #=  Crypto.Random.random.getrandbits(32)
                 self.candidate_block.calculate_hash()
             
             self.candidate_block.mined = True
@@ -312,9 +312,13 @@ class Node(jsonizer.Jsonizer):
         print('Getting longer chain')
         chains = []
         for n in self.ring:
-            # skip the one that did the request because its not up yet
-            r = requests.get('http://' + self.ring[n]['communication_info'] + '/node/chain')
-            chains.append(r.json())
+            try:
+                # skip the one that did the request because its not up yet
+                r = requests.get('http://' + self.ring[n]['communication_info'] + '/node/chain')
+                chains.append(r.json())
+            except Exception:
+                continue
+        
 
         longer_chain = max(chains, key=len)
         self.chain = [Block.fromJSON(b) for b in longer_chain]
